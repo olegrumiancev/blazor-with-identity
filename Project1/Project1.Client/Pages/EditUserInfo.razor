@@ -1,0 +1,138 @@
+﻿@page "/profile"
+@attribute [Authorize]
+@using Morris.Blazor.Validation;
+@using Project1.Client.Data.Validators;
+@using Project1.Shared
+@inject HttpClient Http
+@inject IAuthorizeApi AuthorizeApi
+@inject IJSRuntime JSRuntime
+
+<PageTitle>User Profile</PageTitle>
+
+<h1>User Profile</h1>
+
+@if (personProperties == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <span>User name: @personProperties.UserName</span>
+    <EditForm Model="personProperties" OnValidSubmit="OnValidSubmit">
+        <Morris.Blazor.Validation.Validate />
+        <div class="container mt-md-5">
+            <div class="row justify-content-md-center">
+                <div class="col-sm-10">
+                    <div class="card">
+                        <div class="card-body">
+                            
+
+                            <div class="form-floating mb-3">
+                                <InputText id="inputUsername" class="form-control" @bind-Value="personProperties.UserName" disabled autofocus placeholder="Username" />
+                                <label for="inputUsername">User Name</label>
+                            </div>
+
+                            <div class="form-floating mb-3">
+                                <InputText id="inputFirstName" class="form-control" placeholder="Last name" @bind-Value="personProperties.FirstName" />
+                                <label for="inputFirstName">First name</label>
+                                <ValidationMessage For="@(() => personProperties.FirstName)" />
+                            </div>
+
+                            <div class="form-floating mb-3">
+                                <InputText id="inputLastName" class="form-control" placeholder="Last name" @bind-Value="personProperties.LastName" />
+                                <label for="inputLastName">Last name</label>
+                                <ValidationMessage For="@(() => personProperties.LastName)" />
+                            </div>
+
+                             <div class="form-floating mb-3">
+                                <InputText id="input" class="form-control" placeholder="Personal code" @bind-Value="personProperties.PersonalCode" />
+                                <label for="input">Personal code</label>
+                                <ValidationMessage For="@(() => personProperties.PersonalCode)" />
+                            </div>
+
+                            <div class="form-floating mb-1"><h6>Address:</h6></div>
+
+                            <div class="form-floating mb-3">
+                                <InputText id="input" class="form-control" placeholder="City" @bind-Value="personProperties.AddressCity" />
+                                <label for="input">City</label>
+                                <ValidationMessage For="@(() => personProperties.AddressCity)" />
+                            </div>
+
+                            <div class="form-floating mb-3">
+                                <InputText id="input" class="form-control" placeholder="Street name" @bind-Value="personProperties.AddressStreet" />
+                                <label for="input">Street name</label>
+                                <ValidationMessage For="@(() => personProperties.AddressStreet)" />
+                            </div>
+
+                            <div class="form-floating mb-3">
+                                <InputText id="input" class="form-control" placeholder="Street number" @bind-Value="personProperties.AddressStreetNumber" />
+                                <label for="input">Street number</label>
+                                <ValidationMessage For="@(() => personProperties.AddressStreetNumber)" />
+                            </div>
+
+                            <div class="form-floating mb-3">
+                                <InputText id="input" class="form-control" placeholder="Flat number" @bind-Value="personProperties.AddressFlatNumber" />
+                                <label for="input">Flat number</label>
+                                <ValidationMessage For="@(() => personProperties.AddressFlatNumber)" />
+                            </div>
+
+                            <div class="form-floating mb-3">
+                                <InputText id="inputEmail" class="form-control" placeholder="Email" @bind-Value="personProperties.Email" />
+                                <label for="inputEmail">Email</label>
+                                <ValidationMessage For="@(() => personProperties.Email)" />
+                            </div>
+
+                            <div class="form-floating mb-3">
+                                <InputText id="inputPhoneNumber" class="form-control" placeholder="Phone number" @bind-Value="personProperties.PhoneNumber" />
+                                <label for="inputPhoneNumber">Phone number</label>
+                                <ValidationMessage For="@(() => personProperties.PhoneNumber)" />
+                            </div>
+                         
+                            @*<ValidationSummary />*@
+                            <button class="btn btn-primary" type="submit">Update profile</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </EditForm>
+
+    @*<br />
+    <button class="btn btn-primary" type="button" @onclick="SetRole">Set role</button>*@
+}
+
+@code {
+    private PersonDto personProperties;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        personProperties = await AuthorizeApi.GetUserInfo();
+    }
+
+    private async Task OnValidSubmit(EditContext formContext)
+    {
+        var success = await AuthorizeApi.SetUserInfo(formContext.Model as PersonDto);
+        if (success is false)
+        {
+            await JSRuntime.InvokeAsync<bool>("alert", "There was a problem updating profile information.");
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Successfully updated profile information.");
+        }
+    }
+
+    private async Task SetRole()
+    {
+        var success = await AuthorizeApi.SetUserRole(new() { UserName = personProperties.UserName, RoleName = AppRoles.User });
+        if (success is false)
+        {
+            await JSRuntime.InvokeAsync<bool>("alert", "There was a problem updating role information.");
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Successfully updated role information.");
+        }
+    }
+}

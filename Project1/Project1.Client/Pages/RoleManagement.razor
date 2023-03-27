@@ -1,0 +1,69 @@
+﻿@page "/roles"
+@using Project1.Shared
+@inject HttpClient Http
+@inject IAuthorizeApi AuthorizeApi
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Role management</PageTitle>
+
+<h1>Role management</h1>
+
+<AuthorizeView Roles=@(AppRoles.Admin)>
+    <Authorized>
+        @if (usersWithRoles == null)
+        {
+            <p><em>Loading...</em></p>
+        }
+        else
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>User name</th>
+                        <th>Role name</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var userRoles in usersWithRoles)
+                    {
+                        <tr>
+                            <td>@userRoles.UserName</td>
+                            <td>@userRoles.RoleName</td>
+                            <td>
+                                <button class="btn btn-primary" type="button" @onclick="() => SetRole(userRoles.UserName, AppRoles.User)">Set "User"</button> /
+                                <button class="btn btn-primary" type="button" @onclick="() => SetRole(userRoles.UserName, AppRoles.Admin)">Set "Admin"</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </Authorized>
+    <NotAuthorized>
+        You do not have access. 
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    private List<PersonRoleDto> usersWithRoles;
+
+    protected override async Task OnInitializedAsync()
+    {
+        usersWithRoles = await AuthorizeApi.GetUserRoleList();
+    }
+
+    private async Task SetRole(string userName, string roleName)
+    {
+        var success = await AuthorizeApi.SetUserRole(new() { UserName = userName, RoleName = roleName });
+        if (success is false)
+        {
+            await JSRuntime.InvokeAsync<bool>("alert", "There was a problem updating role information.");
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Successfully updated role to '{roleName}'.");
+        }
+    }
+}
