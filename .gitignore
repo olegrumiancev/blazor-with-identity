@@ -200,3 +200,6 @@ __pycache__/
 
 # Windows thumbnail cache files
 Thumbs.db
+/Project1/Project1.Server/data.db
+/Project1/Project1.Server/data.db-shm
+/Project1/Project1.Server/data.db-wal
